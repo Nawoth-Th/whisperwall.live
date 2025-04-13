@@ -2,7 +2,9 @@
 
 A modern, anonymous gossip sharing platform built with Next.js and MongoDB.
 
-![Whisper Wall](https://github.com/user-attachments/assets/a63266c0-11b2-4de0-9918-73839f711c9d)
+
+![Whisper Wall](https://github.com/user-attachments/assets/4dc2b720-d93f-4a15-a126-b96be66b3ca9)
+
 
 ## 🔍 Overview
 
