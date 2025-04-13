@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "Whisper Wall - Anonymous Gossip",
   description: "Share your secrets anonymously. No names, no traces.",
   viewport: "width=device-width, initial-scale=1, maximum-scale=1",
+    generator: 'v0.dev'
 }
 
 export default function RootLayout({
@@ -29,3 +30,6 @@ export default function RootLayout({
     </html>
   )
 }
+
+
+import './globals.css'

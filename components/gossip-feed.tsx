@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
-import { getGossips, getNewGossips } from "@/lib/actions"
-import type { Gossip, ReadGossipState } from "@/lib/types"
+import { getGossips, getNewGossips, getAllTags } from "@/lib/actions"
+import type { Gossip, ReadGossipState, Tag } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { RefreshCcw, CheckCircle, Circle, Search } from "lucide-react"
+import { RefreshCcw, CheckCircle, Circle, Search, TagIcon, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -19,6 +19,8 @@ export default function GossipFeed() {
   const [readGossips, setReadGossips] = useState<ReadGossipState>({})
   const [lastLoadTime, setLastLoadTime] = useState<Date>(new Date())
   const [searchQuery, setSearchQuery] = useState("")
+  const [selectedTag, setSelectedTag] = useState<string | null>(null)
+  const [availableTags, setAvailableTags] = useState<Tag[]>([])
   const { toast } = useToast()
 
   // Load read gossips from localStorage on initial render
@@ -38,17 +40,39 @@ export default function GossipFeed() {
     localStorage.setItem("readGossips", JSON.stringify(readGossips))
   }, [readGossips])
 
-  // Filter gossips whenever search query or gossips change
+  // Load tags
   useEffect(() => {
-    if (!searchQuery.trim()) {
-      setFilteredGossips(gossips)
-      return
+    async function loadTags() {
+      try {
+        const tags = await getAllTags()
+        setAvailableTags(tags)
+      } catch (error) {
+        console.error("Failed to load tags:", error)
+      }
     }
 
-    const query = searchQuery.toLowerCase()
-    const filtered = gossips.filter((gossip) => gossip.content.toLowerCase().includes(query))
+    loadTags()
+  }, [])
+
+  // Filter gossips whenever search query, selected tag, or gossips change
+  useEffect(() => {
+    let filtered = [...gossips]
+
+    // Filter by search query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase()
+      filtered = filtered.filter((gossip) => gossip.content.toLowerCase().includes(query))
+    }
+
+    // Filter by selected tag
+    if (selectedTag) {
+      filtered = filtered.filter(
+        (gossip) => gossip.tags && gossip.tags.some((tag) => tag.toLowerCase() === selectedTag.toLowerCase()),
+      )
+    }
+
     setFilteredGossips(filtered)
-  }, [searchQuery, gossips])
+  }, [searchQuery, selectedTag, gossips])
 
   async function loadGossips() {
     setLoading(true)
@@ -107,6 +131,19 @@ export default function GossipFeed() {
     }))
   }
 
+  function handleTagClick(tagName: string) {
+    if (selectedTag === tagName) {
+      setSelectedTag(null) // Deselect if already selected
+    } else {
+      setSelectedTag(tagName)
+    }
+  }
+
+  function clearFilters() {
+    setSearchQuery("")
+    setSelectedTag(null)
+  }
+
   useEffect(() => {
     loadGossips()
   }, [])
@@ -141,6 +178,42 @@ export default function GossipFeed() {
           />
         </div>
 
+        {/* Tags filter */}
+        <div>
+          <div className="flex items-center gap-2 mb-2">
+            <TagIcon className="h-4 w-4 text-gray-400" />
+            <span className="text-sm font-medium">Filter by tag:</span>
+            {selectedTag && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={clearFilters}
+                className="text-xs text-gray-400 hover:text-white ml-auto"
+              >
+                Clear filters
+                <X className="h-3 w-3 ml-1" />
+              </Button>
+            )}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {availableTags.length > 0 ? (
+              availableTags.map((tag) => (
+                <Badge
+                  key={tag.id}
+                  className={`cursor-pointer ${
+                    selectedTag === tag.name ? "bg-rose-600 hover:bg-rose-700" : "bg-gray-700 hover:bg-gray-600"
+                  }`}
+                  onClick={() => handleTagClick(tag.name)}
+                >
+                  {tag.name} ({tag.count})
+                </Badge>
+              ))
+            ) : (
+              <p className="text-xs text-gray-400">No tags available yet</p>
+            )}
+          </div>
+        </div>
+
         <div className="flex gap-2 justify-end">
           <Button
             variant="ghost"
@@ -162,8 +235,13 @@ export default function GossipFeed() {
       {filteredGossips.length === 0 ? (
         <Card className="bg-gray-800 border-gray-700">
           <CardContent className="text-center py-10">
-            {searchQuery ? (
-              <p className="text-gray-400">No gossips match your search.</p>
+            {searchQuery || selectedTag ? (
+              <div>
+                <p className="text-gray-400">No gossips match your filters.</p>
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="mt-2">
+                  Clear filters
+                </Button>
+              </div>
             ) : (
               <p className="text-gray-400">No gossip yet. Be the first to share!</p>
             )}
@@ -193,6 +271,21 @@ export default function GossipFeed() {
                     </Button>
                   </div>
                   <p className="whitespace-pre-wrap">{gossip.content}</p>
+
+                  {/* Display tags */}
+                  {gossip.tags && gossip.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {gossip.tags.map((tag) => (
+                        <Badge
+                          key={`${gossip.id}-${tag}`}
+                          className="bg-gray-700 hover:bg-gray-600 cursor-pointer"
+                          onClick={() => handleTagClick(tag)}
+                        >
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </CardContent>
                 <CardFooter className="text-xs text-gray-400 justify-between border-t border-gray-700 mt-4">
                   <span>Anonymous</span>
