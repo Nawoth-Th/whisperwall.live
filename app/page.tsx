@@ -5,7 +5,7 @@ import Link from "next/link"
 export default function Home() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-8 overflow-x-hidden">
         <header className="mb-8 text-center">
           <h1 className="text-4xl font-bold mb-2 text-rose-500">Whisper Wall</h1>
           <p className="text-gray-400">Share your secrets anonymously. No names, no traces.</p>
@@ -18,7 +18,7 @@ export default function Home() {
           </div>
         </div>
 
-        <footer className="mt-16 py-6 border-t border-gray-800 text-center text-gray-400">
+        <footer className="mt-16 py-6 border-t border-gray-800 text-center text-gray-400 px-4">
           <p>
             Inspired from{" "}
             <Link
