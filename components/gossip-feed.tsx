@@ -6,16 +6,19 @@ import { getGossips, getNewGossips } from "@/lib/actions"
 import type { Gossip, ReadGossipState } from "@/lib/types"
 import { formatDistanceToNow } from "date-fns"
 import { Badge } from "@/components/ui/badge"
-import { RefreshCcw, CheckCircle, Circle } from "lucide-react"
+import { RefreshCcw, CheckCircle, Circle, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 
 export default function GossipFeed() {
   const [gossips, setGossips] = useState<Gossip[]>([])
+  const [filteredGossips, setFilteredGossips] = useState<Gossip[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingNew, setLoadingNew] = useState(false)
   const [readGossips, setReadGossips] = useState<ReadGossipState>({})
   const [lastLoadTime, setLastLoadTime] = useState<Date>(new Date())
+  const [searchQuery, setSearchQuery] = useState("")
   const { toast } = useToast()
 
   // Load read gossips from localStorage on initial render
@@ -35,11 +38,24 @@ export default function GossipFeed() {
     localStorage.setItem("readGossips", JSON.stringify(readGossips))
   }, [readGossips])
 
+  // Filter gossips whenever search query or gossips change
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredGossips(gossips)
+      return
+    }
+
+    const query = searchQuery.toLowerCase()
+    const filtered = gossips.filter((gossip) => gossip.content.toLowerCase().includes(query))
+    setFilteredGossips(filtered)
+  }, [searchQuery, gossips])
+
   async function loadGossips() {
     setLoading(true)
     try {
       const data = await getGossips()
       setGossips(data)
+      setFilteredGossips(data)
       setLastLoadTime(new Date())
     } catch (error) {
       console.error("Failed to load gossips", error)
@@ -104,16 +120,28 @@ export default function GossipFeed() {
     )
   }
 
-  const unreadCount = gossips.filter((gossip) => !readGossips[gossip.id]).length
+  const unreadCount = filteredGossips.filter((gossip) => !readGossips[gossip.id]).length
 
   return (
     <div>
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col gap-4 mb-6">
         <div className="flex items-center gap-3">
           <h2 className="text-xl font-semibold">Latest Gossip</h2>
           {unreadCount > 0 && <Badge className="bg-rose-600">{unreadCount} unread</Badge>}
         </div>
-        <div className="flex gap-2">
+
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="search"
+            placeholder="Search gossips..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10 bg-gray-800 border-gray-700 w-full"
+          />
+        </div>
+
+        <div className="flex gap-2 justify-end">
           <Button
             variant="ghost"
             size="sm"
@@ -131,15 +159,19 @@ export default function GossipFeed() {
         </div>
       </div>
 
-      {gossips.length === 0 ? (
+      {filteredGossips.length === 0 ? (
         <Card className="bg-gray-800 border-gray-700">
           <CardContent className="text-center py-10">
-            <p className="text-gray-400">No gossip yet. Be the first to share!</p>
+            {searchQuery ? (
+              <p className="text-gray-400">No gossips match your search.</p>
+            ) : (
+              <p className="text-gray-400">No gossip yet. Be the first to share!</p>
+            )}
           </CardContent>
         </Card>
       ) : (
         <div className="space-y-4">
-          {gossips.map((gossip) => {
+          {filteredGossips.map((gossip) => {
             const isRead = readGossips[gossip.id] || false
 
             return (
