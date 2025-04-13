@@ -1,5 +1,6 @@
 import GossipFeed from "@/components/gossip-feed"
 import SubmitGossip from "@/components/submit-gossip"
+import Link from "next/link"
 
 export default function Home() {
   return (
@@ -16,6 +17,20 @@ export default function Home() {
             <GossipFeed />
           </div>
         </div>
+
+        <footer className="mt-16 py-6 border-t border-gray-800 text-center text-gray-400">
+          <p>
+            Inspired from{" "}
+            <Link
+              href="https://www.tiktok.com/@rizzcado?_t=ZS-8vUXkY2BE9Q&_r=1"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-rose-400 hover:text-rose-300 transition-colors"
+            >
+              Kalathma H
+            </Link>
+          </p>
+        </footer>
       </div>
     </main>
   )
