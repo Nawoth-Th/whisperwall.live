@@ -287,8 +287,9 @@ export default function GossipFeed() {
                     </div>
                   )}
                 </CardContent>
-                <CardFooter className="text-xs text-gray-400 justify-between border-t border-gray-700 mt-4">
+                <CardFooter className="text-xs text-gray-400 flex justify-center gap-4 border-t border-gray-700 mt-4 py-3">
                   <span>Anonymous</span>
+                  <span>•</span>
                   <span>{formatDistanceToNow(new Date(gossip.createdAt), { addSuffix: true })}</span>
                 </CardFooter>
               </Card>
